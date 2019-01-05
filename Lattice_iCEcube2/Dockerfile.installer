@@ -1,0 +1,14 @@
+FROM centos as base
+
+RUN yum install -y epel-release && yum -y update && \
+    yum install -y libXext libpng libSM libXi libXrender libXrandr \
+        libXfixes libXcursor libXinerama freetype fontconfig xpdf \
+        glibc.i686 glib2.i686 zlib.i686 libXext.i686 libpng12.i686 \
+        libSM.i686 libXrender.i686 libXfixes.i686 libXrandr.i686 \
+        libXcursor.i686 freetype.i686 fontconfig.i686 \
+        libXi.i686 libXinerama.i686 && \
+        groupadd -g 1000 icecube2 && adduser -u 1000 -g 1000 icecube2
+        
+FROM base
+ADD license.dat /opt/icecube2/license.dat
+CMD ["/mnt/iCEcube2setup_Sep_12_2017_1708"]
