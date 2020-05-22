@@ -1,0 +1,15 @@
+#!/bin/bash
+
+ETHERNET=08:00:69:CA:FE:01
+
+mkdir -p home
+docker run --rm -it \
+--user `id -u`:`id -g` \
+-e DISPLAY=`../common/gen-xauth icecube2-$(whoami) home/.Xauthority` \
+-e QT_X11_NO_MITSHM=1 -e _X11_NO_MITSHM=1 -e _MITSHM=0 \
+-h icecube2-$(whoami) \
+--mac-address=${ETHERNET} \
+-v /tmp/.X11-unix:/tmp/.X11-unix \
+-v ${PWD}/home:/home/`id -un` \
+icecube2 $*
+

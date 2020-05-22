@@ -1,0 +1,13 @@
+#!/bin/bash
+
+mkdir -p home
+docker run --rm -it \
+-u $(id -u):$(id -g) \
+-e DISPLAY=$(../common/gen-xauth ise-$(whoami) home/.Xauthority) \
+-e QT_X11_NO_MITSHM=1 -e _X11_NO_MITSHM=1 -e _MITSHM=0 \
+-h ise-$(whoami) \
+--mac-address=08:00:27:68:C9:35 \
+-v /tmp/.X11-unix:/tmp/.X11-unix \
+-v $(pwd)/home:/home/$(whoami) \
+ise:14.7 $*
+

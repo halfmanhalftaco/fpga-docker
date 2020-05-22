@@ -1,0 +1,5 @@
+*.zip
+*.vmdk
+home/
+build/mnt/
+

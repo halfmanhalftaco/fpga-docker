@@ -1,4 +1,7 @@
 *.tar
 *.tgz
 *.run
+*.zip
+*/home/
+container-image-built
 

@@ -1,25 +1,24 @@
 INSTALLER=Quartus-lite-18.1.0.625-linux.tar
 CHECKSUM=EAF82392603B92DAE632CC0F356B08AA
 
-all: ${INSTALLER} build
+FILES=$(INSTALLER) Dockerfile
+
+all: container-image-built
 
 ${INSTALLER}:
 	curl -O http://download.altera.com/akdlm/software/acdsinst/18.1std/625/ib_tar/Quartus-lite-18.1.0.625-linux.tar
+	@SUM=$$(md5sum $(INSTALLER) | awk '{print toupper($$1)}'); \
+	  if [ "$$SUM" != "$(CHECKSUM)" ]; then echo "Checksum doesn't match."; exit 1; fi
 
-.PHONY: build
-build: ${INSTALLER}
-	docker build -t quartusii:18.1 .
+container-image-built: $(FILES)
+	@docker rmi quartus:18.1 &>/dev/null || true
+	docker build -t quartus:18.1 . \
+        --build-arg user_uid=$$(id -u) \
+        --build-arg user_gid=$$(id -g) \
+        --build-arg user_name=$$(whoami)
+	touch $@
 
-.PHONY: run
-run:
-	mkdir -p home
-	docker run -it \
-	--user="quartus" \
-	--env="DISPLAY" \
-	--mac-address=08:00:69:CA:FE:01 \
-	--privileged --ipc host \
-	--volume="/dev/bus/usb/:/dev/bus/usb/:rw" \
-	--volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
-	--volume="${PWD}/home:/home/quartus:rw" \
-	quartusii:18.1
-
+.PHONY: clean
+clean:
+	docker rmi quartus:18.1 >&/dev/null || true
+	rm -f container-image-built

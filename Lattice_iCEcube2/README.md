@@ -11,8 +11,8 @@
  
  3) When prompted for a license file, enter/browse to `/opt/icecube2/license.dat`.
  
- 4) When the install completes, uncheck the "Run iCEcube2 Now" option and exit the installer.
+ 4) When the install completes, uncheck the "Launch iCEcube2 Now" option and exit the installer.
  
  5) When the installer exits, the image build process continues.
  
- You should then be able to launch iCEcube2 by entering `make run`.
+ You should then be able to launch iCEcube2 by entering `run-icecube`.

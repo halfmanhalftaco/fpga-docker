@@ -1,55 +1,46 @@
-ETHERNET=08:00:69:CA:FE:01
-INSTALLER=iCEcube2setup_Sep_12_2017_1708
+INSTALLER=iCEcube2setup_Sep_12_2017_1708.tgz
 
-all: installer build
+FILES=Dockerfile.installer Dockerfile.build license.dat ${INSTALLER}
 
-${INSTALLER}.tgz:
+all: container-image-built
+
+${INSTALLER}:
 	curl -O http://files.latticesemi.com/iCE/iCEcube2setup_Sep_12_2017_1708.tgz
 
-${INSTALLER}: ${INSTALLER}.tgz
-	tar xfvz ${INSTALLER}.tgz
-	
 license.dat:
 	@echo "Please acquire a free license for iCEcube2 at:"
 	@echo "http://www.latticesemi.com/Support/Licensing/DiamondAndiCEcube2SoftwareLicensing/iceCube2"
-	@echo "Use the ethernet address defined in the Makefile (currently ${ETHERNET})"
+	@echo "Use the ethernet address defined in the run-icecube script (or set your own)."
 	@echo "Place the license.dat file in this directory."
 	@exit 1
-	
-.PHONY: installer
-installer: license.dat ${INSTALLER}
-	@echo "In the GUI installer, choose /opt/icecube2 as the destination, "
-	@echo "and select /opt/icecube2/license.dat for your license file."
-	xhost +local:root
-	- docker rm icecube2-installer
-	docker build -t icecube2-installer:latest -f Dockerfile.installer .
-	docker run -it \
-	--env="DISPLAY" \
-	--name="icecube2-installer" \
-	--mac-address=${ETHERNET} \
-	--privileged --ipc host \
-	--volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
-	--volume="${PWD}:/mnt:ro" \
-	icecube2-installer
-	xhost -local:root
-	
-.PHONY: build
-build:
-	docker commit icecube2-installer icecube2-installer
-	docker build -t icecube2:20170912 -f Dockerfile.build .
-	docker rm icecube2-installer
-	docker rmi icecube2-installer:latest
 
-.PHONY: run
-run:
-	mkdir -p home
-	docker run -it \
-	--user="icecube2" \
-	--env="DISPLAY" \
-	--mac-address=${ETHERNET} \
-	--privileged --ipc host \
-	--volume="/dev/bus/usb/:/dev/bus/usb/:rw" \
-	--volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
-	--volume="${PWD}/home:/home/icecube2:rw" \
-	icecube2:20170912
-	
+container-image-built: $(FILES)
+	@echo "### In the GUI installer, choose /opt/icecube2 as the destination, "
+	@echo "### and select /opt/icecube2/license.dat for your license file."
+	@echo "### Uncheck the \"Launch ICEcube2 now\" checkbox at the end."
+	@docker rm icecube2-installer &>/dev/null || true
+	@docker rmi icecube2 icecube2:installer &>/dev/null || true
+	@mkdir -p ${CURDIR}/home
+	@echo "Building installer..."
+	@docker build -t icecube2:installer -f Dockerfile.installer .
+	@echo "Launching installer..."
+	@docker run -it \
+	  -e DISPLAY=$$(../common/gen-xauth icecube2 ${CURDIR}/home/.Xauthority) \
+	  --name="icecube2-installer" \
+	  -h icecube2 \
+	  -v ${CURDIR}/home/.Xauthority:/root/.Xauthority \
+	  -v /tmp/.X11-unix:/tmp/.X11-unix \
+	  icecube2:installer
+	@docker commit icecube2-installer icecube2:installed
+	@docker build -t icecube2 -f Dockerfile.build \
+	  --build-arg user_uid=$$(id -u) --build-arg user_gid=$$(id -g) \
+	  --build-arg user_name=$$(whoami) .
+	@docker rm icecube2-installer &>/dev/null
+	@docker rmi icecube2:installer icecube2:installed &>/dev/null
+	@touch $@
+
+.PHONY: clean
+clean:
+	-docker rm icecube2-installer &>/dev/null
+	-docker rmi icecube2:installer icecube2:installed icecube2 &>/dev/null
+	@rm -f container-image-built

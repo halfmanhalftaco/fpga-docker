@@ -1,0 +1,13 @@
+#!/bin/bash
+
+mkdir -p home
+docker run --rm -it \
+-u $(id -u):$(id -g) \
+-e DISPLAY=$(../common/gen-xauth quartusii-$(whoami) home/.Xauthority) \
+-e QT_X11_NO_MITSHM=1 -e _X11_NO_MITSHM=1 -e _MITSHM=0 \
+-h quartusii-$(whoami) \
+--mac-address=08:00:69:CA:FE:02 \
+-v /tmp/.X11-unix:/tmp/.X11-unix \
+-v $(pwd)/home:/home/$(whoami) \
+quartusii:13.1 $*
+
