@@ -1,0 +1,62 @@
+#!/bin/bash
+
+tool=$1
+shift
+
+case $tool in
+	quartus13)
+		dir="Altera_Quartus_II_13.0sp1"
+		tag="quartusii:13.0sp1"
+		;;
+	quartus131)
+		dir="Altera_Quartus_II_13.1"
+		tag="quartusii:13.1"
+		;;
+	quartus18)
+		dir="Intel_Quartus_Prime_18.1"
+		tag="quartus:18.1"
+		;;
+	quartus19)
+		dir="Intel_Quartus_Prime_19.1"
+		tag="quartus:19.1"
+		;;
+	ise147)
+		dir="Xilinx_ISE_14.7"
+		tag="ise:14.7"
+		ethernet="--mac-address=08:00:27:68:C9:35"
+		;;
+	icecube2)
+		dir="Lattice_iCEcube2"
+		tag="icecube2:latest"
+		ethernet="--mac-address=08:00:69:CA:FE:01"
+		;;
+	*)
+		echo "Unknown tool \"$tool\"."
+		echo "Options: quartus13 quartus131 quartus18 quartus19 ise147 icecube2"
+		exit 1
+		;;
+esac
+
+mkdir -p ./$dir/home
+docker_home=$(realpath ./$dir/home)
+
+if [[ "$DISPLAY" == "" ]]; then
+	echo "DISPLAY environment variable is not set. An X display is required to run."
+	exit 1
+fi
+
+DISPLAY=$(./common/gen-xauth $tool-$(whoami) $docker_home/.Xauthority)
+
+if [[ "$DISPLAY" == :* ]]; then
+	x11flags="--ipc=host -v /tmp/.X11-unix:/tmp/.X11-unix"
+else
+	x11flags="-e QT_X11_NO_MITSHM=1 -e _X11_NO_MITSHM=1 -e _MITSHM=0"
+fi
+
+docker run --rm -it \
+-u $(id -u):$(id -g) \
+-e DISPLAY $x11flags $ethernet \
+-h $tool-$(whoami) \
+-v $docker_home:/home/$(whoami) \
+$tag $*
+
