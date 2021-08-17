@@ -1,3 +1,7 @@
+TOOL=quartus131
+
+INSTALLER_URL=http://download.altera.com/akdlm/software/acdsinst/13.1/162/ib_tar/Quartus-web-13.1.0.162-linux.tar
+UPDATE_URL=http://download.altera.com/akdlm/software/acdsinst/13.1.4/182/update/QuartusSetup-13.1.4.182.run
 INSTALLER=Quartus-web-13.1.0.162-linux.tar
 UPDATE=QuartusSetup-13.1.4.182.run
 INSTALLER_CHECKSUM=BA705F9D15F3A43AB7E86D297F394EE3
@@ -8,24 +12,25 @@ FILES=$(INSTALLER) $(UPDATE) Dockerfile
 all: container-image-built
 
 ${INSTALLER}:
-	curl -O http://download.altera.com/akdlm/software/acdsinst/13.1/162/ib_tar/Quartus-web-13.1.0.162-linux.tar
+	curl -O $(INSTALLER_URL)
 	@SUM=$$(md5sum $(INSTALLER) | awk '{print toupper($$1)}'); \
         if [ "$$SUM" != "$(INSTALLER_CHECKSUM)" ]; then echo "Installer checksum doesn't match."; exit 1; fi
 	
 ${UPDATE}:
-	curl -O http://download.altera.com/akdlm/software/acdsinst/13.1.4/182/update/QuartusSetup-13.1.4.182.run
+	curl -O $(UPDATE_URL)
 	@SUM=$$(md5sum $(UPDATE) | awk '{print toupper($$1)}'); \
         if [ "$$SUM" != "$(UPDATE_CHECKSUM)" ]; then echo "Updater checksum doesn't match."; exit 1; fi	
 
 container-image-built: $(FILES)
-	@docker rmi quartusii:13.1 &>/dev/null || true
-	@docker build -t quartusii:13.1 . \
-	--build-arg user_uid=$$(id -u) --build-arg user_gid=$$(id -g) \
-	--build-arg user_name=$$(whoami)
+	@docker rmi fpga:$(TOOL) &>/dev/null || true
+	@docker build -t fpga:$(TOOL) --build-arg "TOOL=$(TOOL)" .
+	@docker rmi $$(docker images --filter "label=com.halfmanhalftaco.fpga.temp" -q)
 	@touch $@
 
 .PHONY: clean
 clean:
-	docker rmi quartusii:13.1 >&/dev/null || true
+	docker rmi fpga:$(TOOL) >&/dev/null || true
+	docker rmi $$(docker images --filter "label=com.halfmanhalftaco.fpga.tool=$(TOOL)" -q)
+	docker rmi $$(docker images --filter "label=com.halfmanhalftaco.fpga.temp" -q)
 	rm -f container-image-built
 

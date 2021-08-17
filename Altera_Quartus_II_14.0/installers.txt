@@ -1,0 +1,5 @@
+https://download.altera.com/akdlm/software/acdsinst/14.0/200/ib_tar/Quartus-web-14.0.0.200-linux.tar
+https://download.altera.com/akdlm/software/acdsinst/14.0.2/209/update/QuartusSetup-14.0.2.209-linux.run
+https://download.altera.com/akdlm/software/acdsinst/14.0.2/209/ib_installers/ModelSimSetup-14.0.2.209-linux.run
+https://download.altera.com/akdlm/software/acdsinst/14.0.2/209/ib_installers/AOCLSetup-14.0.2.209-linux.run
+https://download.altera.com/akdlm/software/soceds/14.0.2/274/linux64/installers/ib_installers/SoCEDSSetup-14.0.2.274-linux.run

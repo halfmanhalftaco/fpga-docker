@@ -1,4 +1,7 @@
-FROM fpga-base
-ADD iCEcube2setup_Sep_12_2017_1708.tgz /installer
+FROM fpga-base:centos6
+LABEL com.halfmanhalftaco.fpga.temp=1
+COPY iCEcube2setup_Dec_10_2020_2012 /installer/
+RUN chmod +x /installer/iCEcube2setup_Dec_10_2020_2012
 ADD license.dat /opt/icecube2/license.dat
-CMD ["/installer/iCEcube2setup_Sep_12_2017_1708"]
+ENTRYPOINT []
+CMD ["/installer/iCEcube2setup_Dec_10_2020_2012"]

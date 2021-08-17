@@ -1,0 +1,13 @@
+#!/bin/bash
+
+groupadd -g $FPGA_UID $FPGA_UNAME && \
+ adduser -u $FPGA_UID -g $FPGA_GID -N -M -d /home/$FPGA_UNAME $FPGA_UNAME
+
+if [ -x /home/$FPGA_UNAME/.fpga-docker/startup.sh ]; then
+	echo "Found startup script, executing..." 
+	/home/$FPGA_UNAME/.fpga-docker/startup.sh
+fi
+
+echo "Running '$*' in container $(hostname)..."
+
+su -c "$*" - $FPGA_UNAME

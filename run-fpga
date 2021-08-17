@@ -1,62 +1,77 @@
 #!/bin/bash
 
+
+list_tools () {
+    echo "Available tools:"
+    docker images --filter "label=com.halfmanhalftaco.fpga.tool" --format "{{.Tag}}" | sort
+}
+
 tool=$1
 shift
 
+[ -z "$tool" ] && (list_tools; exit)
+
+container_id=$(docker images --filter="label=com.halfmanhalftaco.fpga.tool=$tool" --format "{{.ID}}")
+if [ -z "$container_id" ]; then
+	echo "Couldn't locate an image for \"$tool\"."
+	list_tools
+	exit 1
+fi
+
+# settings overrides
 case $tool in
-	quartus13)
-		dir="Altera_Quartus_II_13.0sp1"
-		tag="quartusii:13.0sp1"
-		;;
-	quartus131)
-		dir="Altera_Quartus_II_13.1"
-		tag="quartusii:13.1"
-		;;
-	quartus18)
-		dir="Intel_Quartus_Prime_18.1"
-		tag="quartus:18.1"
-		;;
-	quartus19)
-		dir="Intel_Quartus_Prime_19.1"
-		tag="quartus:19.1"
-		;;
-	ise147)
-		dir="Xilinx_ISE_14.7"
-		tag="ise:14.7"
-		ethernet="--mac-address=08:00:27:68:C9:35"
-		;;
-	icecube2)
-		dir="Lattice_iCEcube2"
-		tag="icecube2:latest"
-		ethernet="--mac-address=08:00:69:CA:FE:01"
-		;;
-	*)
-		echo "Unknown tool \"$tool\"."
-		echo "Options: quartus13 quartus131 quartus18 quartus19 ise147 icecube2"
-		exit 1
-		;;
+	ise147) ethernet="08:00:27:68:C9:35" ;;
+	icecube2) ethernet="08:00:69:CA:FE:01" ;;
 esac
 
-mkdir -p ./$dir/home
-docker_home=$(realpath ./$dir/home)
+### create home directory and common shared directory
+mkdir -p ./home/shared
+mkdir -p ./home/$tool
+docker_home=$(realpath ./home/$tool)
+shared=$(realpath ./home/shared)
+
+### Create (or load) a persistent MAC address for the container
+### necessary for some licensing schemes
+if [ -f $docker_home/.fpga-docker/ethernet ]; then
+	ethernet=$(cat $docker_home/.fpga-docker/ethernet)
+else
+	# https://stackoverflow.com/questions/42660218/bash-generate-random-mac-address-unicast
+	[ -z "$ethernet" ] && ethernet=$(hexdump -n 6 -ve '1/1 "%.2x "' /dev/random | awk -v a="2,6,a,e" -v r="$RANDOM" 'BEGIN{srand(r);}NR==1{split(a,b,",");r=int(rand()*4+1);printf "%s%s:%s:%s:%s:%s:%s\n",substr($1,0,1),b[r],$2,$3,$4,$5,$6}')
+	mkdir -p $docker_home/.fpga-docker
+	echo $ethernet > $docker_home/.fpga-docker/ethernet
+fi
+
+echo "Container ethernet address is $ethernet"
+
+### Set up X11 forwarding/authentication
 
 if [[ "$DISPLAY" == "" ]]; then
 	echo "DISPLAY environment variable is not set. An X display is required to run."
 	exit 1
 fi
 
-DISPLAY=$(./common/gen-xauth $tool-$(whoami) $docker_home/.Xauthority)
+username=$(whoami)
+hostname="$tool-$username"
+
+DISPLAY=$(./scripts/gen-xauth $hostname $docker_home/.Xauthority)
 
 if [[ "$DISPLAY" == :* ]]; then
 	x11flags="--ipc=host -v /tmp/.X11-unix:/tmp/.X11-unix"
+	echo "Using DISPLAY=$DISPLAY via UNIX socket"
 else
 	x11flags="-e QT_X11_NO_MITSHM=1 -e _X11_NO_MITSHM=1 -e _MITSHM=0"
+	echo "Using DISPLAY=$DISPLAY via TCP"
 fi
 
+
 docker run --rm -it \
--u $(id -u):$(id -g) \
--e DISPLAY $x11flags $ethernet \
--h $tool-$(whoami) \
--v $docker_home:/home/$(whoami) \
-$tag $*
+-l fpga-docker --name $hostname -h $hostname \
+--mac-address $ethernet \
+-e "DISPLAY=$DISPLAY" $x11flags \
+-e "FPGA_UID=$(id -u)" -e "FPGA_GID=$(id -g)" -e "FPGA_UNAME=$username" \
+-v $docker_home:/home/$username \
+-v $shared:/home/$(whoami)/shared \
+--device-cgroup-rule 'c 189:* rmw' \
+-v /dev/bus/usb/003:/dev/bus/usb/003 \
+$container_id $*
 

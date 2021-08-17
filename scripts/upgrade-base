@@ -1,0 +1,23 @@
+#!/bin/bash -x
+
+base_tag=fpga-base:centos6
+container_tag=$1
+
+base=$(docker images --format "{{.ID}}" $base_tag)
+[ "$base" == "" ] && echo "Base image \"$base_tag\" not found." && exit 1 
+
+container=$(docker images --format="{{.ID}}" $container_tag)
+[ "$container" == "" ] && echo "Container image \"$container_tag\" not found." && exit 1
+
+cmd=$(docker inspect -f "{{ json .Config.Cmd }}" $container_tag)
+
+docker build -t $container_tag - << END
+FROM $container_tag AS old_target
+FROM $base_tag
+COPY --from=old_target /opt /opt
+CMD $cmd
+END
+
+#docker rmi $container
+
+echo "Updated container \"$container_tag\" to latest fpga-base."

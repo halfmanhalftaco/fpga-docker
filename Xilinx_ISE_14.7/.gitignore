@@ -1,5 +1,2 @@
-*.zip
-*.vmdk
-home/
-build/mnt/
+install/mnt/
 

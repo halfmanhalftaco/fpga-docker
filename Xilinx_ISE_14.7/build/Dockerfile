@@ -1,9 +1,4 @@
-FROM	ise-install:14.7 
-ARG	user_uid
-ARG	user_gid
-ARG	user_name
-ADD	launch.sh /opt/Xilinx/
-RUN     groupadd -g $user_uid $user_name && \
-        adduser -u $user_uid -g $user_gid -N -M -d /home/$user_name $user_name
-CMD 	["/bin/bash", "-l", "/opt/Xilinx/launch.sh"]
-
+FROM ise-install:latest
+ENTRYPOINT ["/usr/local/sbin/fpga"]
+CMD ["/opt/Xilinx/launch.sh"]
+LABEL com.halfmanhalftaco.fpga.tool=ise147

@@ -1,0 +1,3 @@
+https://download.altera.com/akdlm/software/acdsinst/14.1/186/ib_tar/Quartus-web-14.1.0.186-linux.tar
+https://download.altera.com/akdlm/software/acdsinst/14.1.1/190/update/QuartusSetup-14.1.1.190-linux.run
+https://download.altera.com/akdlm/software/acdsinst/14.1.1/190/ib_installers/AOCLSetup-14.1.1.190-linux.run

@@ -1,7 +1,8 @@
 *.tar
 *.tgz
+*.tar.gz
 *.run
 *.zip
-*/home/
+*.vmdk
+home
 container-image-built
-
