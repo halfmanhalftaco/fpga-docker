@@ -10,7 +10,7 @@ mkdir -p $(dirname $XAUTH_FILE)
 # attempt to bring host DISPLAY/xauth to container
 
 rm -f $XAUTH_FILE && touch $XAUTH_FILE
-DOCKER_XAUTH=$(xauth list $DISPLAY | awk '{print $3}')
+DOCKER_XAUTH=$(xauth list $DISPLAY | grep $(uname -n) | awk '{print $3}')
 DOCKER_DISPLAY=$DISPLAY
 
 # assume that <hostname>:# displays are TCP displays, use docker host IP as display in container
