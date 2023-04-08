@@ -15,7 +15,7 @@ DOCKER_DISPLAY=$DISPLAY
 
 # assume that <hostname>:# displays are TCP displays, use docker host IP as display in container
 # this requres sshd_config option "X11UseLocalhost no"
-if [[ $DISPLAY == $(hostname)* ]]; then
+if [[ $DISPLAY == $(uname -n)* ]]; then
 	DOCKER_DISPLAY="172.17.0.1:$(echo $DISPLAY | cut -d : -f 2)"
 fi
 
