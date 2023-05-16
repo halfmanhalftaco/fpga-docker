@@ -11,7 +11,7 @@
 #TOOLS += Altera_Quartus_Prime_17.0
 #TOOLS += Altera_Quartus_Prime_17.1
 #TOOLS += Intel_Quartus_Prime_18.0
-#TOOLS += Intel_Quartus_Prime_18.1
+TOOLS += Intel_Quartus_Prime_18.1
 #TOOLS += Intel_Quartus_Prime_19.1
 #TOOLS += Intel_Quartus_Prime_10.1
 #TOOLS += Intel_Quartus_Prime_20.1.1

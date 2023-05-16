@@ -5,6 +5,7 @@ RUN 	/quartus/setup.sh --mode unattended --accept_eula 1 --installdir /opt/quart
 
 FROM 	fpga-base:centos6
 COPY 	--from=install /opt/quartus /opt/quartus
+RUN   sed -i 's/linux\_rh[[:digit:]]\+/linux/g' /opt/quartus/modelsim_ase/vco
 CMD 	["/opt/quartus/quartus/bin/quartus", "--64bit"]
 ARG     TOOL
 LABEL   com.halfmanhalftaco.fpga.tool=$TOOL
